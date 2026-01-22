@@ -2,9 +2,9 @@ package Assignment1;
 import java.util.*;
 
 class Student{
-    String Name;
-    int id;
-    int marks;
+    private String Name;
+    private int id;
+    private int marks;
 
     Student(String Name,int id,int marks){
         this.Name=Name;
