@@ -4,7 +4,7 @@ class Employee{
     int id;
     String name;
     double montlySalary;
-    static String companyName="ABC Corp";
+    static String companyName="Innovatechs";
     
     Employee(int id, String name, double montlySalary){
         this.id=id;
