@@ -13,6 +13,12 @@ class InvalidEmailException extends Exception {
     }
 }
 
+class InvalidUsernameException extends Exception {
+    public InvalidUsernameException(String message) {
+        super(message);
+    }
+}
+
 public class program3 {
     public static final Logger logger = Logger.getLogger(program3.class.getName());
 
@@ -32,18 +38,28 @@ public class program3 {
             System.out.println("Email is valid: " + email);
         }
     }
+
+    public void validateUsername(String username) throws InvalidUsernameException {
+        String usernameRegex = "^[a-zA-Z0-9._-]{5,15}$";
+        if (!username.matches(usernameRegex)) {
+            throw new InvalidUsernameException("Invalid username: " + username);
+        } else {
+            System.out.println("Username is valid: " + username);
+        }
+    }
     public static void main(String[] args) {
         logger.info("Program started");
         program3 validator = new program3();
         Scanner scanner = new Scanner(System.in);
         int n = 1;
         while(n!=0){
-            System.out.println("Enter Empolyee Info : Name, Age, Email");
+            System.out.println("Enter Empolyee Info : Name, Age, Email, Username");
         
             String name = scanner.nextLine();
             int age = scanner.nextInt();    
             scanner.nextLine(); 
             String email = scanner.nextLine();
+            String username = scanner.nextLine();
             boolean isValid = true;
             try{
                 try {
@@ -58,6 +74,12 @@ public class program3 {
                 catch (InvalidEmailException e) {
                     isValid = false;
                     logger.severe("Email validation failed: " + e.getMessage());
+                }
+                try {
+                    validator.validateUsername(username);
+                } catch (InvalidUsernameException e) {
+                    isValid = false;
+                    logger.severe("Username validation failed: " + e.getMessage());
                 }
                 if(isValid){
                     logger.info("Employee " + name + " with age " + age + " and email " + email + " is valid.");
