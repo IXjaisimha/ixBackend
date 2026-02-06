@@ -116,7 +116,9 @@ INSERT INTO students VALUES
 (1000000001, 'Ram Kumar', 'ram.kumar@gmail.com', 20, '2023-06-15', 1);
 
 delete from courses where fee<=1000;
+
 truncate table enrollments;
+
 delete from enrollments where [enrollment_timestamp] < '2023-06-21';
 
 alter table students
