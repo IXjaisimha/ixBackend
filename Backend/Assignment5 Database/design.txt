@@ -1,0 +1,171 @@
+======================================================================================================================================
+                                                GREEN ENERGY AND EV INFRASTRUCTURE
+======================================================================================================================================
+
+===>>> PROBLEM STATEMENT
+
+Green Energy & EV Infrastructure
+    Core Idea
+    This system manages electric vehicle charging across city hubs where power is limited and must be shared fairly.
+    It ensures priority users get better service while tracking energy usage and power balancing.
+    
+    Constraints
+    1. One Hub has many Charging Ports (different speeds).
+    2. One Vehicle can have many Charging Sessions (history must be stored).
+    3. Grid has a maximum power limit — if too many cars plug in, charging speed must reduce automatically.
+    4. Users with Premium Plan get higher priority when power is limited.
+    5. System must track energy flowing to vehicle and back to grid (Vehicle-to-Grid).
+    6. Charging session can never be deleted — only marked Completed or Cancelled.
+    7. Every power adjustment must be logged.
+    
+    SQL Questions
+    1. Find all Hubs where the total power currently used by charging vehicles is greater than the maximum power allowed by its Grid_Node.
+    2. Show all vehicles that are currently charging and check if their charging speed was reduced (throttled).
+    3. Calculate how much energy was sent back to the grid (V2G) from each Hub in the last 7 days.
+    4. Find Premium plan users who were charging during high load time but did not get higher priority speed.
+    5. Show charging sessions that are marked as Completed but do not have any Energy_Logs recorded.
+
+
+===>>> Tables
+
+    1. EV Grids
+    2. EV Hubs
+    3. EV Charging Ports
+
+    4. Owners
+    5. vehicles
+    6. Subscriptions
+
+    7. Charging Sessions
+    8. Charging_Logs
+
+    9.  Registations
+    10. PowerPlan
+    11. Cities
+    12. payments
+    13. LoadBalancingTable
+
+===>>> Table Columns and Constraints
+
+
+    I. EV_Grids{
+        BIGINT grid_id PRIMARY KEY,
+        DECIMAL(10,2) power_available,
+        DECIMAL(10,2) power_limit,
+        VARCHAR Energy_source,
+        VARCHAR city
+    } 
+
+    II. EV_Hubs{
+        BIGINT Hub_id PRIMARY KEY,
+        BIGINT Grid_id FORIEGN KEY REFERNECES EV_Grids,
+        INT No_of_charging_ports,
+        VARCHAR Deafult_speed,
+        DECIMAL(10,2) power_storage,
+        VARCHAR area,
+        DECIMAL(10,2) safety_limit
+    }
+
+    III. EV_Charging_ports{
+        BIGINT Port_id PRIMARY KEY,
+        BIGINT Hub_id FORIEGN KEY REFERNECES EV_Hubs,
+        VARCHAR Current_speed FORIEGN KEY REFERNECES EV_Hubs
+    }
+
+    IV. Owners{
+        BIGINT Owner_id PRIMARY KEY,
+        BIGINT Govt_id UNIQUE,
+        VARCHAR first_name,
+        VARCHAR last_name,
+        VARCHAR address,
+    }
+
+    V. Vehicles{
+        BIGINT Vehicle_id PRIMARY KEY,
+        BIGINT Owner_id FORIEGN KEY REFERNECES Owners,
+        VARCHAR Car_Brand,
+        VARCHAR Model_name,
+        INT Battery_capacity NOT NULL,
+        VARCHAR Registation_number NOT NULL UNIQUE,
+    }
+
+    VI. Subscriptions{
+        BIGINT subscription_id,
+        BIGINT Owner_id REFERNECES Owners,
+        DATE start_date,
+        DATE expiary_date,
+        VARCHAR Type,
+        INT Amount
+    }
+
+    VII. Charging_Sessions{
+        BIGINT session_id PRIMARY KEY,
+        BIGINT Port_id FORIEGN KEY REFERNECES EV_Charging_ports,
+        BIGINT Vehicle_id FORIEGN KEY REFERNECES Vehicles,
+        DECIMAL(10,2) Energy_Consumed,
+        BIGINT plan_id FORIEGN KEY REFERNECES Charging_Plan,
+        INT Time_Consumed_hours_mins,
+        DECIMAL(10,2) Cost,
+        INT Battery_level_before,
+        INT Battery_level_after,
+        VARCHAR status
+    }
+
+    VIII. Charging_Logs{
+        BIGINT Log_id PRIMARY KEY,
+        BIGINT session_id FORIEGN KEY REFERNECES Charging_Sessions,
+        TIMESTAMP Time_of_Entry,
+        TIMESTAMP Time_of_Exit
+    }
+
+    IX. Charging_Plan{
+        BIGINT plan_id PRIMARY KEY,
+        BIGINT city_id FORIEGN KEY,
+        VARCHAR speed, [low, moderate, high]
+        DECIMAL(10,2) peak_hour_cost,
+        DECIMAL(10,2) Normal_hour_cost
+    }
+
+    X. Registation{
+        BIGINT Reg_id,
+        BIGINT plan_id FORIEGN KEY REFERNECES Charging_Plan,
+        BIGINT Port_id FORIEGN KEY REFERNECES EV_Charging_ports,
+        BIGINT Vehicle_id FORIEGN KEY REFERNECES Vehicles,
+        BIGINT Owner_id FORIEGN KEY REFERNECES Owners,
+        BIGINT city_id FORIEGN KEY REFERNECES Cities,
+        TIME Start_time_slot
+    }
+
+    XI. Cities{
+        BIGINT city_id,
+        VARCHAR city_name,
+        DECIMAL(10,2) costperkwh
+    }
+
+    XII. Payments{
+        BIGINT payment_id PRIMARY KEY,
+        BIGINT Owner_id FORIEGN KEY REFERNECES Owners,
+        BIGINT session_id FORIEGN KEY REFERNECES Charging_Sessions,
+        DECIMAL Price,
+        VARCHAR payment_method,
+        VARCHAR payment_status
+    }
+
+    XIII. LoadBalancingTable (Auto generation for every 5-10 mins){
+        BIGINT log_id,
+        TIMESTAMP timestamp,
+        BIGINT Hub_id FORIEGN KEY REFERNECES EV_Hubs,
+        DECIMAL(10,2) Available_capacity_for_EV_HUB,
+        INT No_of_connected_ports,
+        DECIMAL(10,2) Non_ev_load,
+        DECIMAL(10,2) Ev_load,
+        DECIMAL(10,2) Ev_power_for_each_connected_port,
+        BOOLEAN is_it_a_peak_hour{
+            conditions : No_of_charging_ports = No_of_connected_ports && 
+                        power_available - safety_limit = (Non_ev_load + Ev_load) power_consuming
+        }
+        BOOLEAN is_it_a_threshold{
+            conditions: power_available - safety_limit < (Non_ev_load + Ev_load) power_consuming 
+        }
+    }
+

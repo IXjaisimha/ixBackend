@@ -44,8 +44,8 @@ order{
 
 
 departments {
-    department_id
-    department_name 
+    department_id,
+    department_name, 
     location
 
 }
@@ -76,7 +76,7 @@ projects (
 
 
 employee_projects (
-    employee_id
+    employee_id,
     project_id,
     assigned_date,
 

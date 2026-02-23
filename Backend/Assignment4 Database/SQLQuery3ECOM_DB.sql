@@ -249,11 +249,22 @@ select order_id,agg.* from orders o join
 (select product_id, product_name ,round(price/2,0) as discounted_price from products) agg on
 agg.product_id = o.product_id;
 
-update orders set expected_delivery_date = '2026-02-08' where order_id in (3000000001,3000000004,3000000006,3000000009);
+update orders set expected_delivery_date = '2026-02-13' where order_id in (3000000001,3000000004,3000000006,3000000009);
 
 select * from orders;
 
-select Datediff(day,order_placed_time, getdate()) as no_of_days_passed,case when expected_delivery_date <= GETDATE() then 'Delivered' else 'Yet to be Delivered' end as Delivery_status, order_id from orders;
+use ecom_db;
+
+select Datediff(day,order_placed_time, getdate()) as no_of_days_passed,
+case when expected_delivery_date <= GETDATE() then 'Delivered' else 'Yet to be Delivered' end as Delivery_status, 
+order_id from orders;
+
+
+
+
+
+
+
 
 
 

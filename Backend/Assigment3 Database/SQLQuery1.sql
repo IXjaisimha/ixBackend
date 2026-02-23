@@ -7,24 +7,25 @@ join_date date,
 active_flag bit default 0
 );
 
-
-
 CREATE TABLE courses (
     course_id INT PRIMARY KEY,
     course_name VARCHAR(30),
     fee DECIMAL(10, 2)
 );
 
+DROP TABLE enrollments;
+
 
 CREATE TABLE enrollments (
     enroll_id BIGINT PRIMARY KEY,
     student_id BIGINT NOT NULL,
     course_id INT NOT NULL,
-    enrollment_timestamp DATE,
-    FOREIGN KEY (student_id) REFERENCES students(student_id),
-    FOREIGN KEY (course_id) REFERENCES courses(course_id)
-);
+    enrollment_timestamp DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
+    
+        FOREIGN KEY (student_id) REFERENCES students(student_id),
+        FOREIGN KEY (course_id) REFERENCES courses(course_id)
+);
 
 INSERT INTO students (student_id, name, email, age, join_date, active_flag) VALUES
 (1000000001, 'Ram Kumar', 'ram.kumar@gmail.com', 20, '2023-06-15', 1),
@@ -64,6 +65,7 @@ INSERT INTO enrollments (enroll_id, student_id, course_id, enrollment_timestamp)
 (5000000014, 1000000009, 202, '2023-09-05 16:20:00'),
 (5000000015, 1000000010, 203, '2022-08-20 10:35:00');
 
+
 select * from enrollments;
 select * from students;
 select * from courses;
@@ -73,6 +75,9 @@ ALTER COLUMN email varchar(50);
 
 ALTER TABLE courses
 ALTER COLUMN fee decimal(10,2);
+
+alter table enrollments
+alter column enrollment_timestamp datetime2 default sysdatetime();
 
 
 insert into students (student_id, name, email, age, join_date, active_flag) values 
@@ -89,14 +94,34 @@ INSERT INTO enrollments (enroll_id, student_id, course_id, enrollment_timestamp)
 (5000000017, 1000000012, 206, '2023-06-25 14:15:00'),
 (5000000018, 1000000013, 206, '2023-07-12 09:45:00');
 
+Exec sp_rename 'students.name','names','column';
 
-select name,email from students;
+Exec sp_rename 'students.age','ages','column';
+
+select * from students;
+
+update students set active_flag = 0 where email like '%@gmail.com';
+
+update students set registration_date = GETDATE() , active_flag = 1, phone_number = '9618690117'  where ages > 20; 
+
+
+select count(ages) as no_of_times_repeating, ages from students group by ages having count(ages)>1; 
+
+select max(ages) from students where ages < (select max(ages) from students where ages < (select max(ages) from students));
+
+with ages_filter as(
+	select names, ages , dense_rank() over (order by ages desc) as rn
+	from students
+)
+
+
+select names,ages from ages_filter where rn = 3; 
 
 select * from students order by age desc;
 
 select top 5 * from students order by join_date desc;
 
-select distinct(age) from students;
+select distinct(ages) from students order by ages desc;
 
 select distinct(course_name) from courses;
 
@@ -116,9 +141,7 @@ INSERT INTO students VALUES
 (1000000001, 'Ram Kumar', 'ram.kumar@gmail.com', 20, '2023-06-15', 1);
 
 delete from courses where fee<=1000;
-
 truncate table enrollments;
-
 delete from enrollments where [enrollment_timestamp] < '2023-06-21';
 
 alter table students

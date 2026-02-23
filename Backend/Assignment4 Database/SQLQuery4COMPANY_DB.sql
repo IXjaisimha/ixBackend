@@ -32,7 +32,6 @@ CREATE TABLE projects (
 );
 
 
-
 CREATE TABLE employee_projects (
     employee_id BIGINT,
     project_id BIGINT,
@@ -243,22 +242,21 @@ select sum(e.salary), d.department_name,d.department_id from employees e right j
 -------------------Departments with more than 5 employees
 select count(e.employee_id), d.department_name,d.department_id from employees e right join departments d on e.department_id = d.department_id group by d.department_id,d.department_name having count(e.employee_id)>1;
 
-
 -----------------------JOIN + WHERE Tasks---------------------------------
 
 select  * from employees e right join departments d on e.department_id = d.department_id where d.department_name = 'IT';
-
 
 -----------------------JOIN + LIKE Tasks-------------------------------------------------------------------
 -------------------Employees name LIKE pattern + department
 
 select  * from employees e right join departments d on e.department_id = d.department_id where d.department_name like 'IT' and e.first_name like 'A%';
 
-
 --------------------------JOIN + Subquery Tasks (IN / NOT IN / EXISTS / NOT EXISTS)----------------------------
 
 
 select * from employees where employee_id not in (select employee_id from employee_projects);
+
+use company_db;
 
 select e.employee_id, concat(e.first_name, ' ' ,e.last_name) as emp_name ,
 e.salary, agg.avg_dept_salary, agg.department_name 
@@ -271,8 +269,6 @@ agg
 on agg.department_id = e.department_id 
 where e.salary > agg.avg_dept_salary;
 
-
 select * from employees where department_id in (select department_id from departments);
-
 
 select * from employee_projects;
