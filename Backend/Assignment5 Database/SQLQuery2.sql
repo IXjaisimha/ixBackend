@@ -211,19 +211,37 @@ insert into loadbalancingtable values
 (1102, dateadd(minute,-20,getdate()), 202, 2500.00, 2, 2500.00, 2000.00, 1000.00, 1, 0),
 (1103, dateadd(minute,-10,getdate()), 201, 1000.00, 5, 6000.00, 4500.00, 900.00, 1, 1);
 
+
+
 select * from ev_grids;
+
 select * from cities;
+
 select * from owners;
+
 select * from ev_hubs;
+
 select * from ev_charging_ports;
+
 select * from vehicles;
+
 select * from subscriptions;
+
 select * from charging_plan;
+
 select * from charging_sessions;
+
 select * from charging_logs;
+
 select * from registration;
+
 select * from payments;
+
 select * from loadbalancingtable;
+
+
+
+------------------1. Find all Hubs where the total power currently used by charging vehicles is greater than the maximum power allowed by its Grid_Node.
 
 select distinct h.hub_id,
        g.power_limit,
@@ -235,7 +253,8 @@ join loadbalancingtable l
     on l.hub_id = h.hub_id
 where (l.ev_load + l.non_ev_load) > g.power_limit;
 
-
+------------------    2. Show all vehicles that are currently charging and check if their charging speed was reduced (throttled).
+    
 select v.vehicle_id,
        v.registration_number,
        cs.session_id,
@@ -248,10 +267,11 @@ join ev_charging_ports p
     on p.port_id = cs.port_id
 join charging_plan cp
     on cp.plan_id = cs.plan_id
-where lower(cs.status) = 'charging'
-  and lower(p.current_speed) != lower(cp.speed);
+where cs.status = 'charging'
+  and p.current_speed != cp.speed;
 
-
+------------------- 3. Calculate how much energy was sent back to the grid (V2G) from each Hub in the last 7 days.
+    
 select h.hub_id,
        sum(abs(cs.energy_consumed)) as energy_sent_to_grid
 from charging_sessions cs
@@ -265,7 +285,8 @@ where cs.energy_consumed < 0
   and cl.time_of_entry >= dateadd(day, -7, getdate())
 group by h.hub_id;
 
-
+----------------------4. Find Premium plan users who were charging during high load time but did not get higher priority speed.
+    
 select distinct o.owner_id,
        o.first_name,
        cs.session_id,
@@ -286,13 +307,19 @@ join loadbalancingtable l
     on l.hub_id = h.hub_id
 join charging_plan cp
     on cp.plan_id = cs.plan_id
-where lower(s.type) = 'premium'
+where s.type = 'premium'
   and l.is_it_a_peak_hour = 1
-  and lower(p.current_speed) <> lower(cp.speed);
+  and p.current_speed <> cp.speed;
+
+-------------------------5. Show charging sessions that are marked as Completed but do not have any Energy_Logs recorded.
 
 select cs.session_id
 from charging_sessions cs
 left join charging_logs cl
     on cl.session_id = cs.session_id
-where lower(cs.status) = 'completed'
+where cs.status = 'completed'
   and cl.session_id is null;
+
+------------------------------------------------------     RANDOM QUERIES       -------------------------------------------------------
+
+select *, datediff(MINUTE,time_of_entry,time_of_exit) from Charging_Logs where time_of_exit is not null;
