@@ -1,0 +1,11 @@
+spring:
+  config:
+    activate:
+       on-profile: prod
+server:
+    port: 7070
+
+
+app:
+    name: "Spring Boot Prod"
+    description: "This is the production environment configuration for Spring Boot application."

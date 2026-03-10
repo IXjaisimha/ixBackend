@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+         on-profile: dev
+server:
+    port: 9090
+
+app:
+    name: "Spring Boot Dev"
+    description: "This is the development environment configuration for Spring Boot application."
